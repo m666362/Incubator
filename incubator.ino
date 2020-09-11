@@ -15,6 +15,10 @@ float humidity;
 float temperature;
 float heatIndex;
 
+// Light
+#define bulb 4
+int bulbState = LOW;
+
 void setup()
 {
   // initialize the LCD
@@ -31,9 +35,13 @@ void setup()
   Serial.println(F("Lcd test!"));
   delay(1000);
   lcd.clear();
+
   //dht11
   dht.begin();
   Serial.println(F("DHT11 test!"));
+
+  // Bulb
+  pinMode(bulb, OUTPUT);
 }
 
 void loop()
@@ -43,29 +51,42 @@ void loop()
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
   if (isnan(temperature) || isnan(humidity)) {
-    Serial.println(F("Sensor not working"));
-    lcd.setCursor(0, 0);
-    lcd.print("Sensor not working");
+    Serial.print("Sensor not working");
+    Serial.println();
+    lcd.clear();
+    lcd.setCursor(2, 0);
+    lcd.print("Sensor is not");
+    lcd.setCursor(4, 1);
+    lcd.print("Working!");
+  } else {
+    heatIndex = dht.computeHeatIndex(temperature, humidity, false);
+    if (temperature <= 37.7) {
+      bulbState = HIGH;
+      digitalWrite(bulb, bulbState);
+      Serial.print("Humidity: ");
+      Serial.print(humidity);
+      Serial.print(" %");
+      Serial.println();
+      Serial.print("Temperature: ");
+      Serial.print(temperature);
+      Serial.print(" °C");
+      Serial.println();
+      Serial.print("Heat index: ");
+      Serial.print(heatIndex);
+      Serial.println();
+      //
+      lcd.setCursor(0, 0);
+      lcd.print("Temp: ");
+      lcd.setCursor(8, 0);
+      lcd.print(temperature);
+      lcd.setCursor(0, 1);
+      lcd.print("Humi: ");
+      lcd.setCursor(8, 1);
+      lcd.print(humidity);
+    } else {
+      bulbState = LOW;
+      digitalWrite(bulb, bulbState);
+
+    }
   }
-  heatIndex = dht.computeHeatIndex(temperature, humidity, false);
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.print(" %");
-  Serial.println();
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.print(" °C");
-  Serial.println();
-  Serial.print("Heat index: ");
-  Serial.print(heatIndex);
-  Serial.println();
-  //
-  lcd.setCursor(0, 0);
-  lcd.print("Temp: ");
-  lcd.setCursor(8, 0);
-  lcd.print(temperature);
-  lcd.setCursor(0, 1);
-  lcd.print("Humi: ");
-  lcd.setCursor(8, 1);
-  lcd.print(humidity);
 }
